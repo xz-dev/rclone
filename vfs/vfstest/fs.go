@@ -147,7 +147,7 @@ func newRun(useVFS bool, vfsOpt *vfscommon.Options, mountFn mountlib.MountFn) *R
 		useVFS: useVFS,
 		vfsOpt: vfsOpt,
 	}
-	r.vfsOpt.Init()
+	r.vfsOpt.Init(context.Background())
 	fstest.Initialise()
 
 	var err error
@@ -212,7 +212,7 @@ type dirMap map[string]struct{}
 // Create a dirMap from a string
 func newDirMap(dirString string) (dm dirMap) {
 	dm = make(dirMap)
-	for _, entry := range strings.Split(dirString, "|") {
+	for entry := range strings.SplitSeq(dirString, "|") {
 		if entry != "" {
 			dm[entry] = struct{}{}
 		}

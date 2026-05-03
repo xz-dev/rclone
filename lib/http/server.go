@@ -23,6 +23,8 @@ import (
 	"github.com/rclone/rclone/lib/atexit"
 	sdActivation "github.com/rclone/rclone/lib/sdactivation"
 	"github.com/spf13/pflag"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 // Help returns text describing the http server to add to the command
@@ -59,6 +61,14 @@ inserts leading and trailing "/" on ` + "`--{{ .Prefix }}baseurl`" + `, so ` + "
 ` + "`--{{ .Prefix }}baseurl \"/rclone\"` and `--{{ .Prefix }}baseurl \"/rclone/\"`" + ` are all treated
 identically.
 
+` + "`--{{ .Prefix }}disable-zip`" + ` may be set to disable the zipping download option.
+
+#### Protocol
+
+The server supports HTTP/1.1 and HTTP/2.  HTTP/2 is used automatically
+for TLS connections.  For non-TLS connections, HTTP/2 cleartext (h2c)
+is supported, allowing HTTP/2 without encryption.
+
 #### TLS (SSL)
 
 By default this will serve over http.  If you want you can serve over
@@ -88,7 +98,7 @@ It can be configured with .socket and .service unit files as described in
 
 Socket activation can be tested ad-hoc with the ` + "`systemd-socket-activate`" + `command
 
-` + "```sh" + `
+` + "```console" + `
 systemd-socket-activate -l 8000 -- rclone serve
 ` + "```" + `
 
@@ -271,11 +281,18 @@ func newInstance(ctx context.Context, s *Server, listener net.Listener, tlsCfg *
 		listener = tls.NewListener(listener, tlsCfg)
 	}
 
+	var handler http.Handler = s.mux
+	// Enable h2c (HTTP/2 cleartext) for non-TLS listeners
+	if tlsCfg == nil {
+		h2s := &http2.Server{}
+		handler = h2c.NewHandler(s.mux, h2s)
+	}
+
 	return &instance{
 		url:      url,
 		listener: listener,
 		httpServer: &http.Server{
-			Handler:           s.mux,
+			Handler:           handler,
 			ReadTimeout:       time.Duration(s.cfg.ServerReadTimeout),
 			WriteTimeout:      time.Duration(s.cfg.ServerWriteTimeout),
 			MaxHeaderBytes:    s.cfg.MaxHeaderBytes,
@@ -523,8 +540,6 @@ func (s *Server) initTLS() error {
 func (s *Server) Serve() {
 	s.wg.Add(len(s.instances))
 	for _, ii := range s.instances {
-		// TODO: decide how/when to log listening url
-		// log.Printf("listening on %s", ii.url)
 		go ii.serve(&s.wg)
 	}
 	// Install an atexit handler to shutdown gracefully

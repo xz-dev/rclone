@@ -570,13 +570,11 @@ func (s *syncCopyMove) startTrackRenames() {
 	if !s.trackRenames {
 		return
 	}
-	s.trackRenamesWg.Add(1)
-	go func() {
-		defer s.trackRenamesWg.Done()
+	s.trackRenamesWg.Go(func() {
 		for o := range s.trackRenamesCh {
 			s.renameCheck = append(s.renameCheck, o)
 		}
-	}()
+	})
 }
 
 // This stops the background rename collection
@@ -593,12 +591,10 @@ func (s *syncCopyMove) startDeleters() {
 	if s.deleteMode != fs.DeleteModeDuring && s.deleteMode != fs.DeleteModeOnly {
 		return
 	}
-	s.deletersWg.Add(1)
-	go func() {
-		defer s.deletersWg.Done()
+	s.deletersWg.Go(func() {
 		err := operations.DeleteFilesWithBackupDir(s.ctx, s.deleteFilesCh, s.backupDir)
 		s.processError(err)
-	}()
+	})
 }
 
 // This stops the background deleters
@@ -743,7 +739,7 @@ func parseTrackRenamesStrategy(strategies string) (strategy trackRenamesStrategy
 	if len(strategies) == 0 {
 		return strategy, nil
 	}
-	for _, s := range strings.Split(strategies, ",") {
+	for s := range strings.SplitSeq(strategies, ",") {
 		switch s {
 		case "hash":
 			strategy |= trackRenamesStrategyHash

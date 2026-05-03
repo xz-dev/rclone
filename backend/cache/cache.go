@@ -563,9 +563,10 @@ Eg
 	})
 
 	rc.Add(rc.Call{
-		Path:  "cache/stats",
-		Fn:    f.httpStats,
-		Title: "Get cache stats",
+		Path:   "cache/stats",
+		NoAuth: true,
+		Fn:     f.httpStats,
+		Title:  "Get cache stats",
 		Help: `
 Show statistics for the cache remote.
 `,
@@ -684,7 +685,7 @@ func (f *Fs) rcFetch(ctx context.Context, in rc.Params) (rc.Params, error) {
 		start, end int64
 	}
 	parseChunks := func(ranges string) (crs []chunkRange, err error) {
-		for _, part := range strings.Split(ranges, ",") {
+		for part := range strings.SplitSeq(ranges, ",") {
 			var start, end int64 = 0, math.MaxInt64
 			switch ints := strings.Split(part, ":"); len(ints) {
 			case 1:

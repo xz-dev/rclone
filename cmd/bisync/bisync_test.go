@@ -85,6 +85,8 @@ var logReplacements = []string{
 	`^NOTICE: .*?: Replacing invalid UTF-8 characters in "[^"]*"$`, dropMe,
 	// ignore rclone debug messages
 	`^DEBUG : .*$`, dropMe,
+	// ignore SFTP host key messages
+	`^NOTICE: .*?No host key validation is being performed.*$`, dropMe,
 	// ignore dropbox info messages
 	`^NOTICE: too_many_(requests|write_operations)/\.*: Too many requests or write operations.*$`, dropMe,
 	`^NOTICE: .*?: Forced to upload files to set modification times on this backend.$`, dropMe,
@@ -329,7 +331,7 @@ func testBisync(ctx context.Context, t *testing.T, path1, path2 string) {
 
 	baseDir, err := os.Getwd()
 	require.NoError(t, err, "get current directory")
-	randName := time.Now().Format("150405") + random.String(2) // some bucket backends don't like dots, keep this short to avoid linux errors
+	randName := time.Now().Format("150405") + random.String(8) // some bucket backends don't like dots, keep this short to avoid linux errors
 	tempDir := filepath.Join(os.TempDir(), randName)
 	workDir := filepath.Join(tempDir, "workdir")
 
@@ -522,7 +524,7 @@ func (b *bisyncTest) runTestCase(ctx context.Context, t *testing.T, testCase str
 	require.NoError(b.t, err)
 	b.step = 0
 	b.stopped = false
-	for _, line := range strings.Split(string(scenBuf), "\n") {
+	for line := range strings.SplitSeq(string(scenBuf), "\n") {
 		comment := strings.Index(line, "#")
 		if comment != -1 {
 			line = line[:comment]
@@ -936,7 +938,7 @@ func (b *bisyncTest) runTestStep(ctx context.Context, line string) (err error) {
 // splitLine splits scenario line into tokens and performs
 // substitutions that involve whitespace or control chars.
 func splitLine(line string) (args []string) {
-	for _, s := range strings.Fields(line) {
+	for s := range strings.FieldsSeq(line) {
 		b := []byte(whitespaceReplacer.Replace(s))
 		b = regexChar.ReplaceAllFunc(b, func(b []byte) []byte {
 			c, _ := strconv.ParseUint(string(b[5:7]), 16, 8)
@@ -1513,7 +1515,7 @@ func (b *bisyncTest) compareResults() int {
 
 		fs.Log(nil, divider)
 		fs.Logf(nil, color(terminal.RedFg, "| MISCOMPARE  -Golden vs +Results for  %s"), file)
-		for _, line := range strings.Split(strings.TrimSpace(text), "\n") {
+		for line := range strings.SplitSeq(strings.TrimSpace(text), "\n") {
 			fs.Logf(nil, "| %s", strings.TrimSpace(line))
 		}
 	}
