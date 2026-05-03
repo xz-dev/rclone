@@ -54,6 +54,7 @@ type Options struct {
 	TrustToken string               `config:"trust_token"`
 	Cookies    string               `config:"cookies"`
 	ClientID   string               `config:"client_id"`
+	Region     string               `config:"region"`
 	Enc        encoder.MultiEncoder `config:"encoding"`
 }
 

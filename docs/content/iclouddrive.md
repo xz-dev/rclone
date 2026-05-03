@@ -63,6 +63,15 @@ XX / iCloud Drive
    \ (iclouddrive)
 [snip]
 Storage> iclouddrive
+Option region.
+Region for iCloud endpoints.
+Choose a number from below, or type in an existing value of type string.
+Press Enter for the default (global).
+ 1 / Global (default)
+   \ (global)
+ 2 / China Mainland
+   \ (chinamainland)
+region> 1
 Option service.
 iCloud service to use.
 Choose a number from below, or type in your own value of type string.
@@ -98,6 +107,7 @@ Remote config
 --------------------
 [icloudphotos]
 - type: iclouddrive
+- region: global
 - service: photos
 - apple_id: APPLEID
 - password: *** ENCRYPTED ***
@@ -233,6 +243,22 @@ If the remote still has stale auth state, clear the `cookies` and
 ### Standard options
 
 Here are the Standard options specific to iclouddrive (iCloud Drive and Photos).
+
+#### --iclouddrive-region
+
+Region for iCloud endpoints.
+
+Properties:
+
+- Config:      region
+- Env Var:     RCLONE_ICLOUDDRIVE_REGION
+- Type:        string
+- Default:     "global"
+- Choices:
+  - "global"
+    - Global (default)
+  - "chinamainland"
+    - China Mainland
 
 #### --iclouddrive-service
 

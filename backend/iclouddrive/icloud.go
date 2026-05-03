@@ -149,6 +149,7 @@ func triggerSMSFlow(ctx context.Context, icloud *api.Client, phones []api.Truste
 }
 
 const (
+	configRegion  = "region"
 	configService = "service"
 
 	// Service types
@@ -200,6 +201,20 @@ func init() {
 			Help: "Metadata is read-only and available for the Photos service only.",
 		},
 		Options: []fs.Option{{
+			Name:     configRegion,
+			Help:     "Region for iCloud endpoints.",
+			Required: false,
+			Advanced: false,
+			Default:  "global",
+			Examples: []fs.OptionExample{{
+				Value: "global",
+				Help:  "Global (default)",
+			}, {
+				Value: "chinamainland",
+				Help:  "China Mainland",
+			}},
+			Exclusive: true,
+		}, {
 			Name:     configService,
 			Help:     "iCloud service to use.",
 			Required: true,
@@ -273,7 +288,13 @@ func Config(ctx context.Context, name string, m configmap.Mapper, config fs.Conf
 	trustToken, _ := m.Get(configTrustToken)
 	cookieRaw, _ := m.Get(configCookies)
 	clientID, _ := m.Get(configClientID)
+	regionStr, _ := m.Get(configRegion)
 	cookies := ReadCookies(cookieRaw)
+
+	// Switch endpoints if region is China Mainland during config-time flows.
+	if strings.EqualFold(regionStr, "chinamainland") {
+		api.UseChinaMainlandEndpoints()
+	}
 
 	switch {
 	case config.State == "":
@@ -426,6 +447,11 @@ func newICloudClient(ctx context.Context, name string, m configmap.Mapper) (*api
 
 	if opt.TrustToken == "" {
 		return nil, nil, fmt.Errorf("missing icloud trust token: try refreshing it with \"rclone config reconnect %s:\"", name)
+	}
+
+	// Switch endpoints based on region selection
+	if strings.EqualFold(opt.Region, "chinamainland") {
+		api.UseChinaMainlandEndpoints()
 	}
 
 	cookies := ReadCookies(opt.Cookies)

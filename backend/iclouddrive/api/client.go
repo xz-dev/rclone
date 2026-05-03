@@ -19,11 +19,18 @@ import (
 	"github.com/rclone/rclone/lib/rest"
 )
 
-const (
+var (
 	baseEndpoint  = "https://www.icloud.com"
 	setupEndpoint = "https://setup.icloud.com/setup/ws/1"
 	authEndpoint  = "https://idmsa.apple.com/appleauth/auth"
 )
+
+// UseChinaMainlandEndpoints switches API endpoints to China Mainland (GCBD) domains.
+func UseChinaMainlandEndpoints() {
+	baseEndpoint = "https://www.icloud.com.cn"
+	setupEndpoint = "https://setup.icloud.com.cn/setup/ws/1"
+	authEndpoint = "https://idmsa.apple.com.cn/appleauth/auth"
+}
 
 type sessionSave func(*Session)
 
