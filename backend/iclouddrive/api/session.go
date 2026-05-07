@@ -270,7 +270,7 @@ func (s *Session) authStart(ctx context.Context) error {
 	params.Set("skVersion", "7")
 	params.Set("iframeId", frameTag)
 	params.Set("client_id", s.ClientID)
-	params.Set("redirect_uri", "https://www.icloud.com")
+	params.Set("redirect_uri", s.endpoints.Base)
 	params.Set("response_type", "code")
 	params.Set("response_mode", "web_message")
 	params.Set("state", frameTag)
@@ -454,8 +454,7 @@ func (s *Session) authRepairComplete(ctx context.Context) error {
 	return nil
 }
 
-// getAuthOrigin returns the origin URL for auth requests
-// Supports both global (idmsa.apple.com) and China (idmsa.apple.com.cn) endpoints
+// getAuthOrigin returns the origin URL for auth requests.
 func (s *Session) getAuthOrigin() string {
 	return strings.TrimSuffix(s.endpoints.Auth, "/appleauth/auth")
 }
@@ -473,7 +472,7 @@ func (s *Session) getSRPAuthHeaders() map[string]string {
 		"X-Apple-Widget-Key":               s.ClientID,
 		"X-Apple-OAuth-Client-Id":          s.ClientID,
 		"X-Apple-OAuth-Client-Type":        "firstPartyAuth",
-		"X-Apple-OAuth-Redirect-URI":       "https://www.icloud.com",
+		"X-Apple-OAuth-Redirect-URI":       s.endpoints.Base,
 		"X-Apple-OAuth-Require-Grant-Code": "true",
 		"X-Apple-OAuth-Response-Mode":      "web_message",
 		"X-Apple-OAuth-Response-Type":      "code",

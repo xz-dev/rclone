@@ -38,3 +38,22 @@ func TestExtractHeadersDeletesEmptyCookies(t *testing.T) {
 	assert.Equal(t, "keep", s.Cookies[0].Name)
 	assert.Equal(t, "keep=value", s.GetCookieString())
 }
+
+func TestChinaMainlandEndpointsUseGlobalAuth(t *testing.T) {
+	endpoints := ChinaMainlandEndpoints()
+
+	assert.Equal(t, "https://www.icloud.com.cn", endpoints.Base)
+	assert.Equal(t, "https://setup.icloud.com.cn/setup/ws/1", endpoints.Setup)
+	assert.Equal(t, "https://idmsa.apple.com/appleauth/auth", endpoints.Auth)
+}
+
+func TestSRPAuthHeadersUseRegionalRedirectURI(t *testing.T) {
+	s := NewSession(ChinaMainlandEndpoints())
+	s.ClientID = "client-id"
+
+	headers := s.getSRPAuthHeaders()
+
+	assert.Equal(t, "https://idmsa.apple.com", headers["Origin"])
+	assert.Equal(t, "https://idmsa.apple.com/", headers["Referer"])
+	assert.Equal(t, "https://www.icloud.com.cn", headers["X-Apple-OAuth-Redirect-URI"])
+}

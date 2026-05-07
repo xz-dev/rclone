@@ -35,7 +35,7 @@ var (
 	chinaMainlandEndpoints = Endpoints{
 		Base:  "https://www.icloud.com.cn",
 		Setup: "https://setup.icloud.com.cn/setup/ws/1",
-		Auth:  "https://idmsa.apple.com.cn/appleauth/auth",
+		Auth:  defaultEndpoints.Auth,
 	}
 )
 
